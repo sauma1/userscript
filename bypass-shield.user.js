@@ -221,7 +221,7 @@
 
             let statusData;
             let retries = 0;
-            const maxRetries = 100;
+            const maxRetries = 10000;
             do {
                 const statusUrl = `https://api.bypass.web.id/api/bypass/status/${apiData.taskId}`;
                 console.log("Status API Request URL:", statusUrl);
