@@ -189,6 +189,8 @@
 // @match         *://esohasl.net/*
 // @match         *://rbscripts.net/*
 // @match         *://link.rbscripts.net/*
+// @downloadURL   https://raw.githubusercontent.com/sauma1/userscript/refs/heads/main/bypass-shield.user.js 
+// @updateURL     https://raw.githubusercontent.com/sauma1/userscript/refs/heads/main/bypass-shield.user.js 
 // @homepageURL   https://bypass.web.id
 // @run-at document-start
 // ==/UserScript==
