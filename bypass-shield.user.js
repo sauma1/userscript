@@ -195,7 +195,7 @@
 // @run-at document-start
 // ==/UserScript==
 
-apiKey = 'MASUKAN API KEY MU';
+apiKey = 'MASUKAN_API_KEY_MU';
 
 countDelay = 0;
 
