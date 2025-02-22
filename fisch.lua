@@ -206,7 +206,7 @@ _G.AllFuncs['Farm Fish'] = function()
             until not LocalPlayer.Character:FindFirstChild(RodName) or 
                   LocalPlayer.Character:FindFirstChild(RodName).values.bite.Value or 
                   not _G.Config['Farm Fish'] or
-                  (tick() - biteWaitStart > 0.01) 
+                  (tick() - biteWaitStart > 0.1) 
             
             XyzClone.Text = "<font color='#ff4949'>FISHING!</font>"
             delay(0.1, function()
