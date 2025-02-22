@@ -137,6 +137,8 @@ _G.AllFuncs['Farm Fish'] = function()
         end
         return value
     end
+    
+    -- Function for instant bobber drop
     local function instantLure(rodTool)
         pcall(function()
             if rodTool and rodTool.values and rodTool.values.lure then
@@ -197,13 +199,14 @@ _G.AllFuncs['Farm Fish'] = function()
                 end
             end)
             XyzClone.Text = "<font color='#ff4949'>Lure </font>: 100%"
+            task.wait(0.01)
             local biteWaitStart = tick()
             repeat
                 RunService.Heartbeat:Wait()
             until not LocalPlayer.Character:FindFirstChild(RodName) or 
                   LocalPlayer.Character:FindFirstChild(RodName).values.bite.Value or 
                   not _G.Config['Farm Fish'] or
-                  (tick() - biteWaitStart > 0.1) 
+                  (tick() - biteWaitStart > 0.01) 
             
             XyzClone.Text = "<font color='#ff4949'>FISHING!</font>"
             delay(0.1, function()
@@ -213,6 +216,7 @@ _G.AllFuncs['Farm Fish'] = function()
                     if AutoReel.Value then
                         for i = 1,2 do
                             ReplicatedStorage.events.reelfinished:FireServer(9999999, true)
+                            task.wait(0.01)
                         end
                         stopAutoReel()
                     else
