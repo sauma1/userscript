@@ -1,5 +1,3 @@
--- Fishing Automation Script
--- UI Libraries
 local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/Knuxy92/Ui-linoria/main/Fluent/Fluent.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
@@ -12,13 +10,63 @@ local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 
+-- Cegah deteksi langsung dengan mengacak nama variabel
+local hiddenHook = hookfunction or hookfunc
+LowKeyFile = LowKeyFile or hiddenHook
+
+task.spawn(function()
+    if LowKeyFile then
+        -- Buat fungsi dummy untuk menghindari deteksi pola kode
+        local function obfuscate(...)
+            return 'Flow on Top'
+        end
+
+        -- Pasang hook pertama
+        local success, err = pcall(function()
+            LowKeyFile(game:GetService("ContentProvider").PreloadAsync, obfuscate)
+        end)
+
+        if not success then
+            warn("[Flow] : AC : 1 Failed with " .. err)
+        end
+
+        -- Pasang hook kedua untuk mencegah deteksi ulang
+        local success2, err2 = pcall(function()
+            LowKeyFile(game:GetService("ContentProvider").PreloadAsync, obfuscate)
+        end)
+
+        if not success2 then
+            warn("[Flow] : AC : 2 Failed with " .. err2)
+        end
+    else
+        warn("[Flow] : LowKeyFile tidak tersedia, hook gagal dipasang.")
+    end
+
+    -- Menghapus objek keamanan jika ditemukan
+    task.wait(1) -- Tunggu sebentar sebelum menghapus objek (menghindari race condition)
+    pcall(function()
+        if R and R.GameAnalyticsError then
+            R.GameAnalyticsError:Destroy()
+            warn("[Flow] : GameAnalyticsError berhasil dihapus!")
+        end
+    end)
+
+    -- Acak kode tambahan untuk menghindari pola deteksi
+    local fakeTable = {}
+    for i = 1, 10 do
+        fakeTable[i] = math.random()
+    end
+    fakeTable = nil -- Hapus tabel agar tidak mencurigakan
+end)
+
+
 -- Anti-Kick Protection
 game.Players.LocalPlayer.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
--- Streamer Mode (Hides Username)
+
 local function enableStreamerMode()
     _G.StreamerMode = true
     
@@ -184,7 +232,7 @@ _G.AllFuncs['Farm Fish'] = function()
                     if reelGui then
                         wait(1)
                         while reelGui do
-                            local reelArgs = { [1] = 100, [2] = true }
+                            local reelArgs = { [1] = 1000000000000000000000000, [2] = true }
                             reelfinished:FireServer(unpack(reelArgs))
                             wait(0.1)
                             reelGui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("reel")
@@ -198,7 +246,7 @@ _G.AllFuncs['Farm Fish'] = function()
             -- Handle casting
             if _G.Config.AutoCast then
                 if LocalPlayer.Character:FindFirstChild(RodName) then
-                    LocalPlayer.Character[RodName].events.cast:FireServer(100,1)
+                    LocalPlayer.Character[RodName].events.cast:FireServer(1)
                 end
             else
                 if LocalPlayer.Character:FindFirstChild(RodName) then
@@ -286,57 +334,8 @@ local function setupGUI()
     -- Stats Section
     local StatsSection = FishingTab:AddSection("Fishing Stats")
     
-    local CatchCounter = 0
-    local StartTime = 0
-    
-    local CatchesLabel = StatsSection:AddLabel("Total Catches: 0")
-    local TimeLabel = StatsSection:AddLabel("Time Elapsed: 00:00:00")
-    local RateLabel = StatsSection:AddLabel("Catch Rate: 0/hr")
-    
-    -- Update stats
-    spawn(function()
-        while wait(1) do
-            if _G.Config['Farm Fish'] then
-                if StartTime == 0 then
-                    StartTime = tick()
-                end
-                
-                local elapsed = tick() - StartTime
-                local hours = math.floor(elapsed / 3600)
-                local minutes = math.floor((elapsed % 3600) / 60)
-                local seconds = math.floor(elapsed % 60)
-                
-                local timeString = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-                TimeLabel:SetText("Time Elapsed: " .. timeString)
-                
-                if elapsed > 0 then
-                    local rate = math.floor((CatchCounter / elapsed) * 3600)
-                    RateLabel:SetText("Catch Rate: " .. rate .. "/hr")
-                end
-            else
-                if StartTime ~= 0 then
-                    StartTime = 0
-                    CatchCounter = 0
-                    CatchesLabel:SetText("Total Catches: 0")
-                    TimeLabel:SetText("Time Elapsed: 00:00:00")
-                    RateLabel:SetText("Catch Rate: 0/hr")
-                end
-            end
-        end
-    end)
-    
     -- Settings
     local SettingsSection = SettingsTab:AddSection("Settings")
-    
-    -- Add streamer mode
-    local StreamerModeToggle = SettingsSection:AddToggle("StreamerMode", {Title = "Streamer Mode", Default = false})
-    StreamerModeToggle:OnChanged(function()
-        _G.StreamerMode = StreamerModeToggle.Value
-        
-        if _G.StreamerMode then
-            enableStreamerMode()
-        end
-    end)
     
     SettingsSection:AddButton({
         Title = "Save Settings",
@@ -354,8 +353,6 @@ local function setupGUI()
     
     -- Credits Section
     local CreditsSection = SettingsTab:AddSection("Credits")
-    CreditsSection:AddLabel("Created by: FishingPro")
-    CreditsSection:AddLabel("UI: Fluent Library")
     
     -- Initialize Save Manager
     SaveManager:SetLibrary(Fluent)
