@@ -338,7 +338,39 @@ local function setupGUI()
         LocalPlayer.Character.Humanoid:EquipTool(Backpack:FindFirstChild(RodName))
         LocalPlayer.Character.Humanoid:UnequipTools()
     end)
+    local isFrozen = false
+    local frozenPosition = nil
 
+    local function FreezeCharacter(state)
+        local Character = LocalPlayer.Character
+        if not Character then return end
+
+        local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+        if not HumanoidRootPart then return end
+
+        if state then
+            frozenPosition = HumanoidRootPart.CFrame
+            isFrozen = true
+            print("[INFO] Character is now frozen.")
+            
+            task.spawn(function()
+                while isFrozen do
+                    HumanoidRootPart.CFrame = frozenPosition 
+                    task.wait(0.01)
+                end
+            end)
+        else
+            isFrozen = false
+            print("[INFO] Character is now unfrozen.")
+        end
+    end
+    local FreezeToggle = MainSection:AddToggle("FreezeChar", {
+        Title = "Freeze Character",
+        Default = false
+    })
+    FreezeToggle:OnChanged(function(value)
+        FreezeCharacter(value)
+    end)
     local autoSellRunning = false 
     local function AutoSell()
         if autoSellRunning then return end  
@@ -370,7 +402,6 @@ local function setupGUI()
         Description = "Toggle fishing automation",
         Callback = function()
             isFishing = not isFishing  -- Toggle status
-
             if isFishing then
                 task.spawn(function()  -- Jalankan loop di task terpisah
                     while isFishing do
