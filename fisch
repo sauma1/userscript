@@ -9,8 +9,7 @@ local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
-
--- Cegah deteksi langsung dengan mengacak nama variabel
+local RodName = ReplicatedStorage.playerstats[LocalPlayer.Name].Stats.rod.Value
 local hiddenHook = hookfunction or hookfunc
 LowKeyFile = LowKeyFile or hiddenHook
 
@@ -18,9 +17,9 @@ task.spawn(function()
     if LowKeyFile then
         -- Buat fungsi dummy untuk menghindari deteksi pola kode
         local function obfuscate(...)
-            return 'Flow on Top'
+            return 'Protect BY ShileD Team'
         end
-
+        print('[INFO] Protect BY ShileD Team')
         -- Pasang hook pertama
         local success, err = pcall(function()
             LowKeyFile(game:GetService("ContentProvider").PreloadAsync, obfuscate)
@@ -41,17 +40,13 @@ task.spawn(function()
     else
         warn("[Flow] : LowKeyFile tidak tersedia, hook gagal dipasang.")
     end
-
-    -- Menghapus objek keamanan jika ditemukan
-    task.wait(1) -- Tunggu sebentar sebelum menghapus objek (menghindari race condition)
+    task.wait(1) 
     pcall(function()
         if R and R.GameAnalyticsError then
             R.GameAnalyticsError:Destroy()
             warn("[Flow] : GameAnalyticsError berhasil dihapus!")
         end
     end)
-
-    -- Acak kode tambahan untuk menghindari pola deteksi
     local fakeTable = {}
     for i = 1, 10 do
         fakeTable[i] = math.random()
@@ -88,7 +83,6 @@ local function enableStreamerMode()
         end
     end
     
-    -- Process existing labels
     pcall(function()
         for _, instance in pairs(game:GetDescendants()) do
             if instance.ClassName == "TextLabel" then
@@ -115,6 +109,8 @@ if not _G.Config then
         InstantCast = false,
         AutoReel = false,
         InstantReel = false,
+        equiqRod = false,
+        AutoSell = false,
         ReelMode = "Legit"
     }
 end
@@ -180,91 +176,133 @@ end
 if not _G.AllFuncs then
     _G.AllFuncs = {}
 end
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Backpack = LocalPlayer:WaitForChild("Backpack")
 
-_G.AllFuncs['Farm Fish'] = function()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local RunService = game:GetService("RunService")
-    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-    local Backpack = LocalPlayer:WaitForChild("Backpack")
-    
-    local reelfinished = game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("reelfinished")
-    local RodName = ReplicatedStorage.playerstats[LocalPlayer.Name].Stats.rod.Value
-    
-    -- Main fishing loop
-    while _G.Config['Farm Fish'] do
-        if PlayerGui:FindFirstChild("reel") then
-            -- Handle reeling
-            LocalPlayer.Character.Humanoid:EquipTool(Backpack:FindFirstChild(RodName))
-            
-            local ShakeGui = PlayerGui:FindFirstChild("shakeui")
-            if ShakeGui then
-                repeat wait(0.1)
-                until not ShakeGui:FindFirstChild("safezone")
-                or not ShakeGui.safezone:FindFirstChild("button")
-                or not ShakeGui.safezone.button.Visible
-            end
-            
-            -- Check for Reel UI
-            local ReelUI = PlayerGui:FindFirstChild("reel")
-            if not ReelUI then 
-                wait(0.1)
-                continue 
-            end
-            
-            while true do
-                RunService.RenderStepped:Wait()
-                
-                local ReelUI = LocalPlayer.PlayerGui:FindFirstChild("reel")
-                if not ReelUI then break end
-                
-                -- Handle instant reel feature
-                if _G.Config.InstantReel then
-                    local Bar = ReelUI:FindFirstChild("bar")
-                    
-                    if not Bar then break end
-                    
-                    local ReelScript = Bar:FindFirstChild("reel")
-                    if ReelScript and ReelScript.Enabled == true then
-                        -- This was empty in original code
-                    end
-                    
-                    local reelGui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("reel")
-                    if reelGui then
-                        wait(1)
-                        while reelGui do
-                            local reelArgs = { [1] = 1000000000000000000000000, [2] = true }
-                            reelfinished:FireServer(unpack(reelArgs))
-                            wait(0.1)
-                            reelGui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("reel")
-                        end
-                    end
-                    wait(1)
-                     game:GetService("Players").LocalPlayer.Character:FindFirstChild("No-Life Rod").events.reset:FireServer()
-                end
-            end
-        else
-            -- Handle casting
-            if _G.Config.AutoCast then
-                if LocalPlayer.Character:FindFirstChild(RodName) then
-                    LocalPlayer.Character[RodName].events.cast:FireServer(1)
-                end
-            else
-                if LocalPlayer.Character:FindFirstChild(RodName) then
-                    -- Cast with maximum power
-                    LocalPlayer.Character[RodName].events.cast:FireServer(999999999)
-                end
-            end
+local reelfinished = ReplicatedStorage:WaitForChild("events"):WaitForChild("reelfinished ")
+
+local function equipRod()
+    if _G.Config.equipRod then
+        task.wait(0.2)
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        if not character then
+            return
         end
-        task.wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local rodInBackpack = Backpack:FindFirstChild(RodName)
+        local rodInCharacter = character:FindFirstChild(RodName)
+
+        if rodInCharacter then
+            return
+        end
+        if rodInBackpack and humanoid then
+            humanoid:EquipTool(rodInBackpack)
+        end
     end
 end
 
--- Create GUI
+Backpack.ChildAdded:Connect(function(child)
+    if child:IsA("Tool") then
+        equipRod()
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") then
+            equipRod()
+        end
+    end)
+end)
+local isFreaze = false
+
+local function FreazeChar(state)
+    isFreaze = state  
+    local Character = LocalPlayer.Character
+    if Character then
+        local Humanoid = Character:FindFirstChild("Humanoid")
+        local Animator = Humanoid and Humanoid:FindFirstChild("Animator")
+        local AnimateScript = Character:FindFirstChild("Animate")
+
+        if isFreaze then
+            if Animator then
+                Animator:Destroy() 
+            end
+            if AnimateScript then
+                AnimateScript.Disabled = true
+            end
+        else
+            if Humanoid and not Humanoid:FindFirstChild("Animator") then
+                local NewAnimator = Instance.new("Animator")
+                NewAnimator.Parent = Humanoid
+            end
+            if AnimateScript then
+                AnimateScript.Disabled = false
+            end
+        end
+    end
+end
+
+LocalPlayer.Character.ChildAdded:Connect(function(child)
+    if child.Name == RodName then
+        print("[DEBUG] Rod ditemukan di karakter:", child.Name)
+        if _G.Config.AutoCast == true then
+            task.spawn(function() -- Jalankan dalam thread terpisah
+                while _G.Config.AutoCast and LocalPlayer.Character:FindFirstChild(RodName) do
+                    local Rod = LocalPlayer.Character:FindFirstChild(RodName)
+                    if Rod then
+                        local randomValue = math.random(971, 999) / 10
+                        Rod.events.cast:FireServer(randomValue, 1)
+                        task.wait(0.5)
+                        local Bobber = Rod:FindFirstChild("bobber")
+                        if Bobber then
+                            local Params = RaycastParams.new()
+                            Params.FilterType = Enum.RaycastFilterType.Include
+                            Params.FilterDescendantsInstances = { workspace.Terrain }
+                            local RaycastResult = workspace:Raycast(Bobber.Position, -Vector3.yAxis * 100, Params)
+                            if RaycastResult then
+                                if RaycastResult.Instance:IsA("Terrain") then
+                                    Bobber:PivotTo(CFrame.new(RaycastResult.Position))
+                                end
+                            end
+                        end
+                        FreazeChar(true)
+                        FreazeChar(false)
+                    end
+                    task.wait(2.8)
+                end
+            end)
+        end
+    end
+end)
+
+
+PlayerGui.ChildAdded:Connect(function(child)
+    if child.Name == "reel" then
+        task.spawn(function()
+            while child.Parent == PlayerGui do
+                if _G.Config.InstantReel then
+                    local Bar = child:FindFirstChild("bar")
+                    if Bar then
+                        Bar:Destroy()
+                    end
+                    ReplicatedStorage.events["reelfinished "]:FireServer(100, false)
+                end
+                task.wait(0.0001)
+            end
+        end)
+    end
+end)
+
+
 local function setupGUI()
     -- Create Window
     local Window = Fluent:CreateWindow({
-        Title = "Fishing Automation",
-        SubTitle = "By FishingPro",
+        Title = "Fishing V0.1n",
+        SubTitle = "By ShielDTeam",
         TabWidth = 160,
         Size = UDim2.new(0, 450, 0, 300),
         Acrylic = true,
@@ -273,57 +311,70 @@ local function setupGUI()
     
     -- Create Tabs
     local FishingTab = Window:AddTab({ Title = "Fishing", Icon = "🎣" })
-    local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "⚙️" })
+    local ShopTab = Window:AddTab({ Title = "Shop", Icon = "⚙️" })
+    local AutosTab = Window:AddTab({ Title = "Autos", Icon = "⚙️" })
+    local AreaTab = Window:AddTab({ Title = "Area/TP", Icon = "⚙️" })
+    local SettingsTab = Window:AddTab({ Title = "Setting", Icon = "⚙️" })
     
-    -- Main Fishing Section
     local MainSection = FishingTab:AddSection("Fishing Controls")
+    local AutosSection = AutosTab:AddSection("Auto Sell")
     
     -- Add controls
     local AutoCastToggle = MainSection:AddToggle("AutoCast", {Title = "Instant Bobber", Default = false})
     AutoCastToggle:OnChanged(function()
         _G.Config.AutoCast = AutoCastToggle.Value
-        print("Auto Cast:", AutoCastToggle.Value)
-    end)
-    
-    local AutoReelToggle = MainSection:AddToggle("AutoReel", {Title = "Auto Reel", Default = false})
-    AutoReelToggle:OnChanged(function()
-        _G.Config.AutoReel = AutoReelToggle.Value
-        autoReelEnabled = AutoReelToggle.Value
-        
-        if autoReelEnabled then
-            FishingSystem.startAutoReel()
-        else
-            FishingSystem.stopAutoReel()
-        end
-        
-        print("Auto Reel:", AutoReelToggle.Value)
+        print("[INFO] Auto Cast:", AutoCastToggle.Value)
     end)
     
     local SuperReelToggle = MainSection:AddToggle("SuperReel", {Title = "Super Reel", Default = false})
     SuperReelToggle:OnChanged(function()
         _G.Config.InstantReel = SuperReelToggle.Value
-        print("Super Reel:", SuperReelToggle.Value)
+        print("[INFO] Super Reel:", SuperReelToggle.Value)
     end)
+    local EquiqRod = MainSection:AddToggle("EquiqRod", {Title = "Equip Rod", Default = false})
+    EquiqRod:OnChanged(function(value)
+        _G.Config.equipRod = value
+        print("[INFO] equipRod:", value)
+        LocalPlayer.Character.Humanoid:EquipTool(Backpack:FindFirstChild(RodName))
+        LocalPlayer.Character.Humanoid:UnequipTools()
+    end)
+
+    local autoSellRunning = false 
+    local function AutoSell()
+        if autoSellRunning then return end  
+        autoSellRunning = true
     
+        task.spawn(function()
+            while _G.Config.AutoSell do  
+                ReplicatedStorage.events.SellAll:InvokeServer()
+                task.wait(0.1)  
+            end
+            autoSellRunning = false 
+        end)
+    end
+    
+    local AutoSellFunc = AutosSection:AddToggle("Auto Sell", {
+        Title = "Auto Sell",
+        Default = false
+    })
+    
+    AutoSellFunc:OnChanged(function(value)
+        _G.Config.AutoSell = value
+        if value then
+            AutoSell()  -- Mulai otomatisasi
+        end
+    end)
+    local isFishing = false
     local StartButton = MainSection:AddButton({
-        Title = "Start/Stop Fishing",
+        Title = "Start/Stop BUG",
         Description = "Toggle fishing automation",
         Callback = function()
-            _G.Config['Farm Fish'] = not _G.Config['Farm Fish']
-            
-            if _G.Config['Farm Fish'] then
-                if _G.AllFuncs and _G.AllFuncs['Farm Fish'] then
-                    spawn(_G.AllFuncs['Farm Fish'])
-                    StartButton:SetTitle("Stop Fishing")
-                end
-            else
-                StartButton:SetTitle("Start Fishing")
-            end
-            
-            if SuperReelToggle.Value then
-                spawn(function()
-                    while _G.Config['Farm Fish'] do
-                        task.wait(1)
+            isFishing = not isFishing  -- Toggle status
+
+            if isFishing then
+                task.spawn(function()  -- Jalankan loop di task terpisah
+                    while isFishing do
+                        task.wait(2.3)
                         LocalPlayer.Character.Humanoid:UnequipTools()
                     end
                 end)
@@ -331,7 +382,6 @@ local function setupGUI()
         end
     })
     
-    -- Stats Section
     local StatsSection = FishingTab:AddSection("Fishing Stats")
     
     -- Settings
@@ -354,13 +404,11 @@ local function setupGUI()
     -- Credits Section
     local CreditsSection = SettingsTab:AddSection("Credits")
     
-    -- Initialize Save Manager
     SaveManager:SetLibrary(Fluent)
     InterfaceManager:SetLibrary(Fluent)
-    SaveManager:SetFolder("FishingAutomation")
-    InterfaceManager:SetFolder("FishingAutomation")
+    SaveManager:SetFolder("SHIELDTEAM")
+    InterfaceManager:SetFolder("SHIELDTEAM")
     
-    -- Try to load previous settings
     SaveManager:Load("config")
 end
 
