@@ -374,7 +374,7 @@ local function setupGUI()
             if isFishing then
                 task.spawn(function()  -- Jalankan loop di task terpisah
                     while isFishing do
-                        task.wait(2.4)
+                        task.wait(2.3)
                         LocalPlayer.Character.Humanoid:UnequipTools()
                     end
                 end)
