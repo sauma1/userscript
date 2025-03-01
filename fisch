@@ -272,7 +272,7 @@ LocalPlayer.Character.ChildAdded:Connect(function(child)
                         FreazeChar(true)
                         FreazeChar(false)
                     end
-                    task.wait(2.8)
+                    task.wait(2.6)
                 end
             end)
         end
@@ -289,7 +289,7 @@ PlayerGui.ChildAdded:Connect(function(child)
                     if Bar then
                         Bar:Destroy()
                     end
-                    ReplicatedStorage.events["reelfinished "]:FireServer(100, false)
+                    ReplicatedStorage.events["reelfinished "]:FireServer(100, true)
                 end
                 task.wait(0.0001)
             end
@@ -405,7 +405,7 @@ local function setupGUI()
             if isFishing then
                 task.spawn(function()  -- Jalankan loop di task terpisah
                     while isFishing do
-                        task.wait(2.4)
+                        task.wait(2.3)
                         LocalPlayer.Character.Humanoid:UnequipTools()
                     end
                 end)
